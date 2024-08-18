@@ -14,8 +14,8 @@ pipeline {
                     }
                     steps {
                         sh 'docker build -t nginx-image:latest .'
-                        sh 'docker tag nginx-image:latest my-repo/prod/nginx-image:latest'
-                        sh 'docker push my-repo/prod/nginx-image:latest'
+                        sh 'docker tag nginx-image:latest vijayjerry/prod:latest'
+                        sh 'docker push vijayjerry/prod:latest'
                     }
                 }
                 stage('Build and Push Docker Image to dev Repo') {
@@ -24,8 +24,8 @@ pipeline {
                     }
                     steps {
                         sh 'docker build -t nginx-image:latest .'
-                        sh 'docker tag nginx-image:latest my-repo/dev/nginx-image:latest'
-                        sh 'docker push my-repo/dev/nginx-image:latest'
+                        sh 'docker tag nginx-image:latest vijayjerry/dev:latest'
+                        sh 'docker push vijayjerry/dev:latest'
                     }
                 }
             }
