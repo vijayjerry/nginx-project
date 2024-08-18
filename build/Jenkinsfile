@@ -2,9 +2,8 @@ pipeline {
   agent any
 
   stages {
-    stage('Docker Build & Docker Login') {
+    stage('Docker Build') {
       steps {
-        sh 'docker login -u $DOCKER_USER -P $DOCKER_PASS'
         sh 'docker build -t vijayjerry/nginx-image .'
 
       }
@@ -19,7 +18,7 @@ pipeline {
         script {
             sshagent(['ssh']) {
                 sh '''
-                    ssh -o StrictHostKeyChecking=no ubuntu@15.206.187.220 "
+                    ssh -o StrictHostKeyChecking=no ubuntu@localhost "
                         docker stop java_app;
                         docker rm java_app;
                         docker run -d -p 80:80 --name nginx-container vijayjerry/nginx-image
