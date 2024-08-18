@@ -1,59 +1,45 @@
 pipeline {
     agent any
-
+    
     environment {
-        // Define Docker registry URLs and credentials
-        DEV_REGISTRY = 'https://hub.docker.com/repository/docker/vijayjerry/dev/general'
-        PROD_REGISTRY = 'https://hub.docker.com/repository/docker/vijayjerry/prod/general'
-        DOCKER_CREDENTIALS_ID = 'dockerhub'
+        DOCKER_CREDENTIALS_ID = 'dockerhub'  
+        DOCKER_IMAGE_NAME = 'vijayjerry/prod'  
+        DOCKER_TAG = 'latest'  
     }
-
+    
     stages {
         stage('Checkout') {
             steps {
-                // Checkout the code from your version control system
-                git 'https://https://github.com/vijayjerry/nginx-project.git'
+                // Checkout your source code from version control
+                checkout scm
             }
         }
-
+        
         stage('Build Docker Image') {
             steps {
                 script {
                     // Build the Docker image
-                    docker.build('nginx-app')
+                    docker.build("${env.DOCKER_IMAGE_NAME}:${env.DOCKER_TAG}")
                 }
             }
         }
-
-        stage('Push to Development Registry') {
+        
+        stage('Push Docker Image') {
             steps {
                 script {
-                    // Push Docker image to development registry
-                    docker.withRegistry("${DEV_REGISTRY}", "${DOCKER_CREDENTIALS_ID}") {
-                        docker.image('nginx-app').push('latest')
-                    }
-                }
-            }
-        }
-
-        stage('Push to Production Registry') {
-            steps {
-                script {
-                    // Push Docker image to production registry
-                    docker.withRegistry("${PROD_REGISTRY}", "${DOCKER_CREDENTIALS_ID}") {
-                        docker.image('nginx-app').push('latest')
+                    // Log in to Docker Hub
+                    docker.withRegistry('https://index.docker.io/v1/', "${env.DOCKER_CREDENTIALS_ID}") {
+                        // Push the Docker image to Docker Hub
+                        docker.image("${env.DOCKER_IMAGE_NAME}:${env.DOCKER_TAG}").push("${env.DOCKER_TAG}")
                     }
                 }
             }
         }
     }
-
+    
     post {
         always {
-            // Clean up Docker images after the build
-            script {
-                docker.image('nginx-app').remove()
-            }
+            // Clean up any resources if needed
         }
     }
 }
