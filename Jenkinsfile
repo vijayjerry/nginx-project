@@ -9,9 +9,6 @@ pipeline {
         stage('Build Docker Image') {
             parallel {
                 stage('Build and Push Docker Image to prod Repo') {
-                    when {
-                        branch 'main'
-                    }
                     steps {
                         sh 'docker build -t nginx-image:latest .'
                         sh 'docker tag nginx-image:latest vijayjerry/prod:latest'
@@ -19,9 +16,6 @@ pipeline {
                     }
                 }
                 stage('Build and Push Docker Image to dev Repo') {
-                    when {
-                        branch 'dev'
-                    }
                     steps {
                         sh 'docker build -t nginx-image:latest .'
                         sh 'docker tag nginx-image:latest vijayjerry/dev:latest'
