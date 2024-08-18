@@ -6,26 +6,19 @@ pipeline {
                 checkout scm
             }
         }
-        stage('Build and Push Docker Image to prod Repo') {
+        stage('Build ') {
                     steps {
                         sh 'docker build -t nginx-image:latest .'
                         sh 'docker tag nginx-image:latest vijayjerry/prod:latest'
                         sh 'docker push vijayjerry/prod:latest'
                     }
                 }
-                stage('Build and Push Docker Image to dev Repo') {
+                stage('deploy') {
                     steps {
-                        sh 'docker build -t nginx-image:latest .'
                         sh 'docker tag nginx-image:latest vijayjerry/dev:latest'
                         sh 'docker push vijayjerry/dev:latest'
                     }
                 }
             }
         }
-        stage('Post Actions') {
-            steps {
-                sh 'docker system prune -af'
-            }
-        }
-    }
-}
+        
