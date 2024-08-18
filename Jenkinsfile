@@ -1,64 +1,37 @@
 pipeline {
-    agent any
+  agent any
 
-    environment {
-        DOCKER_CREDENTIALS_ID = 'dockerhub' 
-        GITHUB_CREDENTIALS_ID = 'github' 
+  stages {
+    stage('Build') {
+      steps {
+        sh 'docker build -t my-flask .'
+        sh 'docker tag my-flask $DOCKER_BFLASK_IMAGE'
+      }
     }
-
-    stages {
-        stage('Checkout') {
-            steps {
-                script {
-                    // Checkout the appropriate branch based on the BRANCH_NAME environment variable
-                    git branch: "${env.BRANCH_NAME}", url: 'https://github.com/vijayjerry/nginx-project.git', credentialsId: GITHUB_CREDENTIALS_ID
-                }
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    def imageName = "nginx-image:${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
-                    docker.build(imagename)
-                }
-            }
-        }
-
-        stage('Push Docker Image') {
-            steps {
-                script {
-                    def imageName = "nginx-image:${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
-                    def repo = env.BRANCH_NAME == 'main' ? 'prod-repo' : 'dev-repo'
-                    def fullImageName = "${repo}/${imagename}"
-
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
-                        docker.image(imagename).push(imagename)
-                    }
-                }
-            }
-        }
-
-        stage('Deploy') {
-            when {
-                expression { return env.BRANCH_NAME == 'dev' }
-            }
-            steps {
-                script {
-                    def imageName = "nginx-image:${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
-                    def fullImageName = "dev-repo/${imagename}"
-
-                }
-            }
-        }
+    stage('Test') {
+      steps {
+        sh 'docker run nginx-image python -m pytest app/tests/'
+      }
     }
-
-    post {
-        success {
-            echo "Build and push successful."
+    stage('Deploy') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: "${DOCKER_REGISTRY_CREDS}", passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+          sh "echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin docker.io"
+          sh 'docker push $DOCKER_BFLASK_IMAGE'
         }
-        failure {
-            echo "Build failed."
-        }
+      }
     }
+    
+  }
+
+post{
+      always{
+            sh 'docker rm -f nginccontainer'
+            sh 'docker run --name nginxcontainer -d -p 5000:80 nginx-image'
+            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
 }
+
+}
+}
+
+             
