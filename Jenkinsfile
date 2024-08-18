@@ -20,9 +20,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build the Docker image with a tag
-                    def imageTag = "nginx-image:${env.BRANCH_NAME}"
-                    sh "docker build -t ${imageTag} ."
+                    sh "docker build -t nginx-image:latest ."
                 }
             }
         }
@@ -38,7 +36,7 @@ pipeline {
                     sh "echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin"
                     
                     // Tag the Docker image with the repository
-                    sh "docker tag ${imageTag} ${targetRepo}:${env.BRANCH_NAME}"
+                    sh "docker tag nginx-image:latest vijayjerry/${targetRepo}:${env.BRANCH_NAME}"
                     
                     // Push the Docker image to the appropriate repository
                     sh "docker push ${targetRepo}:${env.BRANCH_NAME}"
