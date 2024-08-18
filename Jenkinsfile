@@ -12,7 +12,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Checkout the code from your version control system
-                git 'https://your-repo-url.git'
+                git 'https://https://github.com/vijayjerry/nginx-project.git'
             }
         }
 
