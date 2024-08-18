@@ -2,44 +2,55 @@ pipeline {
     agent any
     
     environment {
-        DOCKER_CREDENTIALS_ID = 'dockerhub'  
-        DOCKER_IMAGE_NAME = 'vijayjerry/prod'  
-        DOCKER_TAG = 'latest'  
+        // Define Docker Hub credentials ID
+        DOCKER_CREDENTIALS_ID = 'dockerhub'
+        // Define Docker Hub repository names
+        PROD_REPO = 'vijayjerry/prod'
+        DEV_REPO = 'vijayjerry/dev'
     }
-    
+
     stages {
         stage('Checkout') {
             steps {
-                // Checkout your source code from version control
+                // Checkout the code from the repository
                 checkout scm
             }
         }
-        
+
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build the Docker image
-                    docker.build("${env.DOCKER_IMAGE_NAME}:${env.DOCKER_TAG}")
+                    // Build the Docker image with a tag
+                    def imageTag = "nginx-image:${env.BRANCH_NAME}"
+                    sh "docker build -t ${imageTag} ."
                 }
             }
         }
-        
+
         stage('Push Docker Image') {
             steps {
                 script {
-                    // Log in to Docker Hub
-                    docker.withRegistry('https://index.docker.io/v1/', "${env.DOCKER_CREDENTIALS_ID}") {
-                        // Push the Docker image to Docker Hub
-                        docker.image("${env.DOCKER_IMAGE_NAME}:${env.DOCKER_TAG}").push("${env.DOCKER_TAG}")
-                    }
+                    // Determine the target repository based on branch
+                    def targetRepo = env.BRANCH_NAME == 'main' ? PROD_REPO : DEV_REPO
+                    def imageTag = "nginx-image:${env.BRANCH_NAME}"
+                    
+                    // Login to Docker Hub
+                    sh "echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin"
+                    
+                    // Tag the Docker image with the repository
+                    sh "docker tag ${imageTag} ${targetRepo}:${env.BRANCH_NAME}"
+                    
+                    // Push the Docker image to the appropriate repository
+                    sh "docker push ${targetRepo}:${env.BRANCH_NAME}"
                 }
             }
         }
     }
-    
+
     post {
         always {
-            // Clean up any resources if needed
+            // Clean up Docker images after the build
+            sh "docker system prune -af"
         }
     }
 }
