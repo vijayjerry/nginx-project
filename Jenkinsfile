@@ -1,64 +1,52 @@
 pipeline {
     agent any
-
-    environment {
-        DOCKER_CREDENTIALS_ID = 'dockerhub' 
-        DEV_REPO = 'vijayjerry/dev' 
-        PROD_REPO = 'vijayjerry/prod' 
-        IMAGE_NAME = 'nginx-image'  
-    }
-
     stages {
         stage('Checkout') {
             steps {
-                // Checkout the code from the repository
                 checkout scm
             }
         }
-
         stage('Build Docker Image') {
             when {
                 branch 'main'
             }
             steps {
                 script {
-                    docker build -t ("${IMAGE_NAME}:prod") .
+                    sh 'docker build -t nginx-image:latest .'
                 }
             }
         }
-
-        stage('Push Docker Image to Dev Repo') {
+        stage('Push Docker Image to prod Repo') {
             when {
                 branch 'main'
             }
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
-                        docker push vijayjerry ("${IMAGE_NAME}:prod"):('latest')
-                    }
+                    sh 'docker tag nginx-image:latest my-repo/prod/nginx-image:latest'
+                    sh 'docker push my-repo/prod/nginx-image:latest'
                 }
             }
         }
-
-        stage('Build and Push Docker Image to Prod Repo') {
+        stage('Build and Push Docker Image to dev Repo') {
             when {
                 branch 'dev'
             }
+             steps {
+                script {
+                    sh 'docker build -t nginx-image:latest .'
+                }
+            }
             steps {
                 script {
-                    docker build -t ("${IMAGE_NAME}:dev") .
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
-                         docker push vijayjerry ("${IMAGE_NAME}:dev"):('latest')
-                    }
+                    sh 'docker tag nginx-image:latest my-repo/dev/nginx-image:latest'
+                    sh 'docker push my-repo/dev/nginx-image:latest'
                 }
             }
         }
-    }
-
-    post {
-        always {
-            // Clean up Docker images and containers if necessary
-            sh 'docker system prune -af'
+        stage('Post Actions') {
+            steps {
+                sh 'docker system prune -af'
+            }
         }
     }
 }
