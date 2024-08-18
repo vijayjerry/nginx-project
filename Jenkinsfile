@@ -18,23 +18,23 @@ pipeline {
 
         stage('Build Docker Image') {
             when {
-                branch 'dev'
+                branch 'main'
             }
             steps {
                 script {
-                    docker.build("${IMAGE_NAME}:dev")
+                    docker build -t ("${IMAGE_NAME}:prod") .
                 }
             }
         }
 
         stage('Push Docker Image to Dev Repo') {
             when {
-                branch 'dev'
+                branch 'main'
             }
             steps {
                 script {
                     docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
-                        docker.image("${IMAGE_NAME}:dev").push('latest')
+                        docker push vijayjerry ("${IMAGE_NAME}:prod"):('latest')
                     }
                 }
             }
@@ -42,13 +42,13 @@ pipeline {
 
         stage('Build and Push Docker Image to Prod Repo') {
             when {
-                branch 'master'
+                branch 'dev'
             }
             steps {
                 script {
-                    docker.build("${IMAGE_NAME}:prod")
+                    docker build -t ("${IMAGE_NAME}:dev") .
                     docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
-                        docker.image("${IMAGE_NAME}:prod").push('latest')
+                         docker push vijayjerry ("${IMAGE_NAME}:dev"):('latest')
                     }
                 }
             }
