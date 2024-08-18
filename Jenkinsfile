@@ -6,9 +6,7 @@ pipeline {
                 checkout scm
             }
         }
-        stage('Build Docker Image') {
-            parallel {
-                stage('Build and Push Docker Image to prod Repo') {
+        stage('Build and Push Docker Image to prod Repo') {
                     steps {
                         sh 'docker build -t nginx-image:latest .'
                         sh 'docker tag nginx-image:latest vijayjerry/prod:latest'
