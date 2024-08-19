@@ -3,8 +3,8 @@ pipeline {
     environment {
         // Define your Docker Hub credentials and repository names
         DOCKER_CREDENTIALS_ID = 'dockerhub'
-        PROD_REPO = 'prod/nginx'
-        DEV_REPO = 'dev/nginx'
+        PROD_REPO = 'vijayjerry/prod'
+        DEV_REPO = 'vijayjerry/dev'
     }
     stages {
         stage('Build and Push Production Image') {
@@ -14,7 +14,7 @@ pipeline {
             steps {
                 script {
                     // Checkout the main branch
-                    checkout scm: [$class: 'GitSCM', branches: [[name: 'main']], userRemoteConfigs: [[url: 'your-git-repo-url']]]
+                    checkout scm: [$class: 'GitSCM', branches: [[name: 'main']], userRemoteConfigs: [[url: 'https://github.com/vijayjerry/nginx-project.git']]]
                     
                     // Build Docker image
                     sh 'docker build -t ${PROD_REPO}:latest .'
@@ -35,7 +35,7 @@ pipeline {
             steps {
                 script {
                     // Checkout the dev branch
-                    checkout scm: [$class: 'GitSCM', branches: [[name: 'dev']], userRemoteConfigs: [[url: 'your-git-repo-url']]]
+                    checkout scm: [$class: 'GitSCM', branches: [[name: 'dev']], userRemoteConfigs: [[url: 'https://github.com/vijayjerry/nginx-project.git']]]
                     
                     // Build Docker image
                     sh 'docker build -t ${DEV_REPO}:latest .'
