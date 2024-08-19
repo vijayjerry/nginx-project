@@ -1,54 +1,57 @@
 pipeline {
     agent any
-    
     environment {
-        // Define Docker Hub credentials ID
+        // Define your Docker Hub credentials and repository names
         DOCKER_CREDENTIALS_ID = 'dockerhub'
-        // Define Docker Hub repository names
-        PROD_REPO = 'vijayjerry/prod'
-        DEV_REPO = 'vijayjerry/dev'
+        PROD_REPO = 'prod/nginx'
+        DEV_REPO = 'dev/nginx'
     }
-
     stages {
-        stage('Checkout') {
-            steps {
-                // Checkout the code from the repository
-                checkout scm
+        stage('Build and Push Production Image') {
+            when {
+                branch 'main'
             }
-        }
-
-        stage('Build Docker Image') {
             steps {
                 script {
-                    sh "docker build -t nginx-image:latest ."
+                    // Checkout the main branch
+                    checkout scm: [$class: 'GitSCM', branches: [[name: 'main']], userRemoteConfigs: [[url: 'your-git-repo-url']]]
+                    
+                    // Build Docker image
+                    sh 'docker build -t ${PROD_REPO}:latest .'
+                    
+                    // Push Docker image to Docker Hub production repository
+                    withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                        sh 'docker push ${PROD_REPO}:latest'
+                    }
                 }
             }
         }
-
-        stage('Push Docker Image') {
+        
+        stage('Build and Push Development Image') {
+            when {
+                branch 'dev'
+            }
             steps {
                 script {
-                    // Determine the target repository based on branch
-                    def targetRepo = env.BRANCH_NAME == 'main' ? PROD_REPO : DEV_REPO
-                    def imageTag = "nginx-image:${env.BRANCH_NAME}"
+                    // Checkout the dev branch
+                    checkout scm: [$class: 'GitSCM', branches: [[name: 'dev']], userRemoteConfigs: [[url: 'your-git-repo-url']]]
                     
-                    // Login to Docker Hub
-                    sh "echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin"
+                    // Build Docker image
+                    sh 'docker build -t ${DEV_REPO}:latest .'
                     
-                    // Tag the Docker image with the repository
-                    sh "docker tag nginx-image:latest vijayjerry/${targetRepo}:${env.BRANCH_NAME}"
-                    
-                    // Push the Docker image to the appropriate repository
-                    sh "docker push ${targetRepo}:${env.BRANCH_NAME}"
+                    // Push Docker image to Docker Hub development repository
+                    withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                        sh 'docker push ${DEV_REPO}:latest'
+                    }
                 }
             }
         }
     }
-
     post {
         always {
-            // Clean up Docker images after the build
-            sh "docker system prune -af"
+            cleanWs() // Clean workspace after build
         }
     }
 }
