@@ -11,7 +11,11 @@ pipeline {
             steps {
                 script {
                     // Checkout the main branch
-                    checkout scm: [$class: 'GitSCM', branches: [[name: 'main']], userRemoteConfigs: [[url: 'https://github.com/vijayjerry/nginx-project.git']]]
+                    checkout scm: [
+                        $class: 'GitSCM',
+                        branches: [[name: 'main']],
+                        userRemoteConfigs: [[url: 'https://github.com/vijayjerry/nginx-project.git']]
+                    ]
                     
                     // Build Docker image
                     sh 'docker build -t ${PROD_REPO}:latest .'
@@ -29,7 +33,11 @@ pipeline {
             steps {
                 script {
                     // Checkout the dev branch
-                    checkout scm: [$class: 'GitSCM', branches: [[name: 'dev']], userRemoteConfigs: [[url: 'https://github.com/vijayjerry/nginx-project.git']]]
+                    checkout scm: [
+                        $class: 'GitSCM',
+                        branches: [[name: 'dev']],
+                        userRemoteConfigs: [[url: 'https://github.com/vijayjerry/nginx-project.git']]
+                    ]
                     
                     // Build Docker image
                     sh 'docker build -t ${DEV_REPO}:latest .'
@@ -43,19 +51,21 @@ pipeline {
             }
         }
     }
-     post {
+    post {
         success {
             echo "Pipeline completed successfully."
         }
         failure {
             script {
-                // Send an email notification if the application is down
+                // Send an email notification if the pipeline fails
                 emailext(
-                mail to: "vijayjerry01@gmail.com",
                     subject: "Application Deployment Failed: ${env.JOB_NAME} - ${env.BUILD_NUMBER}",
-                    body: "The deployment of the application failed. The application is down at ${APP_URL}. Please investigate.",
-                    )
-                 }
+                    body: "The deployment of the application failed. The application is down. Please investigate.",
+                    to: "vijayjerry01@gmail.com"
+                )
             }
         }
+    }
+}
+
      
