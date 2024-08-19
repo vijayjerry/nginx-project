@@ -51,15 +51,11 @@ pipeline {
             script {
                 // Send an email notification if the application is down
                 emailext(
+                mail to: "vijayjerry01@gmail.com",
                     subject: "Application Deployment Failed: ${env.JOB_NAME} - ${env.BUILD_NUMBER}",
                     body: "The deployment of the application failed. The application is down at ${APP_URL}. Please investigate.",
-                    to: "vijayjerry01@gmail.com"
-                )
+                    )
+                 }
             }
         }
-     post {
-        always {
-            cleanWs() // Clean workspace after build
-        }
-    }   
-}    
+     
