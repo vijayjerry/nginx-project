@@ -8,7 +8,7 @@ pipeline {
     }
     stages {
         stage('Build and Push Production Image') {
-            when {
+            if {
                 branch 'main'
             }
             steps {
@@ -29,7 +29,7 @@ pipeline {
         }
         
         stage('Build and Push Development Image') {
-            when {
+            if {
                 branch 'dev'
             }
             steps {
