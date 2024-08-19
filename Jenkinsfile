@@ -8,9 +8,6 @@ pipeline {
     }
     stages {
         stage('Build and Push Production Image') {
-            when {
-                branch 'main'
-            }
             steps {
                 script {
                     // Checkout the main branch
@@ -29,9 +26,6 @@ pipeline {
         }
         
         stage('Build and Push Development Image') {
-            when {
-                branch 'dev'
-            }
             steps {
                 script {
                     // Checkout the dev branch
